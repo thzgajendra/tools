@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free JSON to CSV Converter Online (Nested JSON, Apify Dataset Export)</title>
+<meta name="description" content="Convert a JSON array to CSV in your browser. Nested objects are flattened to columns like a.b.c. Works for Apify dataset JSON, API responses and scraped data. Nothing is uploaded.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/json-to-csv.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:180px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free JSON to CSV Converter</h1>
+<p>Paste a JSON array of objects (or a single object). Nested keys are flattened (<code>user.name</code>); arrays are written as JSON text. Runs in your browser: nothing is sent anywhere.</p>
+<textarea id="in" placeholder='[{"id":1,"user":{"name":"Jane"},"tags":["a","b"]},{"id":2,"user":{"name":"Bob"}}]'></textarea>
+<p><button id="go">Convert</button><button id="dl">Download data.csv</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<div class="cta">
+Scraped or extracted data? Clean the CSV with the <a href="csv-cleaner.html">CSV cleaner</a> or check emails with the
+<a href="email-checker.html">email list checker</a>. For big jobs on Apify:
+<a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker</a> |
+<a href="https://apify.com/gajendra_malviya/pdf-to-text-pages">PDF to Text</a> |
+<a href="https://apify.com/gajendra_malviya/image-to-text-ocr">Image OCR</a> |
+<a href="https://apify.com/gajendra_malviya/app-store-reviews-all-countries">App Store Reviews</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Is my data uploaded?</b> No. Processing is local JavaScript.</p>
+<p><b>How are nested objects handled?</b> Flattened with dots. Columns are the union of all keys, in first-seen order. Arrays become JSON text in one cell.</p>
+<p><b>Excel opens it wrongly?</b> The download includes a UTF-8 BOM so accents and non-Latin text display correctly.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function flat(o,p,out){for(const k of Object.keys(o)){const v=o[k],key=p?p+'.'+k:k;
+ if(v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length)flat(v,key,out);
+ else out[key]=v}return out}
+function cell(v){if(v===null||v===undefined)return'';if(typeof v==='object')v=JSON.stringify(v);v=String(v);
+ return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function toCsv(data){if(!Array.isArray(data))data=[data];
+ const rows=data.map(r=>r&&typeof r==='object'&&!Array.isArray(r)?flat(r,'',{}):{value:r});
+ const cols=[];const seen=new Set();rows.forEach(r=>Object.keys(r).forEach(k=>{if(!seen.has(k)){seen.add(k);cols.push(k)}}));
+ return{csv:[cols.map(cell).join(',')].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(','))).join('\n'),rows:rows.length,cols:cols.length}}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+$('go').onclick=()=>{try{const r=toCsv(JSON.parse($('in').value));$('out').value=r.csv;$('sum').textContent=r.rows+' rows, '+r.cols+' columns'}catch(e){$('sum').textContent='Invalid JSON: '+e.message}};
+$('dl').onclick=()=>{const b=new Blob(['﻿'+$('out').value],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='data.csv';a.click()};
+}
+</script>
+</body>
+</html>
