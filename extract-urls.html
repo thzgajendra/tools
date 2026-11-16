@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free URL Extractor: pull all links from text, dedupe, list domains - runs in your browser</title>
+<meta name="description" content="Paste any text or HTML and extract every http/https URL. Dedupe, strip UTM tracking parameters, and get a domain count. Nothing is uploaded; runs in your browser.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/extract-urls.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:200px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+label{margin-right:1rem}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free URL Extractor</h1>
+<p>Paste text, an email, markdown or HTML source. Every http/https link is pulled out. Runs in your browser: nothing is uploaded.</p>
+<textarea id="in"></textarea>
+<p><label><input type="checkbox" id="dd" checked> Remove duplicates</label>
+<label><input type="checkbox" id="utm" checked> Strip utm_ / fbclid / gclid parameters</label>
+<label><input type="checkbox" id="so"> Sort A-Z</label></p>
+<p><button id="go">Extract URLs</button><button id="cp">Copy result</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<pre id="dom"></pre>
+<div class="cta">
+Need every page URL of a whole website? Use <a href="sitemap-to-csv.html">sitemap to CSV</a>. Got a list of people to contact? Check the emails with the <a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker on Apify</a>.
+Also free: <a href="dedupe-lines.html">duplicate line remover</a> | <a href="extract-emails.html">email extractor</a> | <a href="csv-cleaner.html">CSV cleaner</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Which links are found?</b> Anything starting with http:// or https://. Trailing punctuation such as ")" "." or "," is removed.</p>
+<p><b>Is my text uploaded?</b> No. Processing is local JavaScript.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function extractUrls(text,o){
+ o=o||{};
+ const m=text.match(/https?:\/\/[^\s<>"'`\\]+/gi)||[];
+ let urls=m.map(u=>{
+  u=u.replace(/[)\].,;:!?]+$/,'');
+  if(o.stripTracking){
+   try{const x=new URL(u);
+    for(const k of [...x.searchParams.keys()]){if(/^utm_/i.test(k)||k==='fbclid'||k==='gclid')x.searchParams.delete(k);}
+    u=x.toString();
+   }catch(e){}
+  }
+  return u;
+ }).filter(u=>u.length>8);
+ const total=urls.length;
+ if(o.dedupe){urls=[...new Set(urls)];}
+ if(o.sort)urls.sort();
+ const domains={};
+ for(const u of urls){try{const h=new URL(u).hostname;domains[h]=(domains[h]||0)+1;}catch(e){}}
+ return {urls:urls,total:total,domains:domains};
+}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+$('go').onclick=()=>{const r=extractUrls($('in').value,{dedupe:$('dd').checked,stripTracking:$('utm').checked,sort:$('so').checked});
+ $('out').value=r.urls.join('\n');
+ $('sum').textContent=r.urls.length+' URLs ('+r.total+' found).';
+ $('dom').textContent=Object.entries(r.domains).sort((a,b)=>b[1]-a[1]).map(e=>e[1]+'  '+e[0]).join('\n');};
+$('cp').onclick=()=>navigator.clipboard.writeText($('out').value);
+}
+if(typeof module!=='undefined')module.exports={extractUrls};
+</script>
+</body>
+</html>
