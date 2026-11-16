@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Email Extractor: Pull Email Addresses from Text, Dedupe and Sort</title>
+<meta name="description" content="Paste any text, HTML or CSV and extract every email address. Removes duplicates, lowercases, sorts, counts domains. Runs in your browser; nothing is uploaded.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/extract-emails.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:180px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free Email Extractor</h1>
+<p>Paste text, an HTML page source, a CSV or a log. The tool finds every email address, lowercases it, removes duplicates and sorts the list. Runs in your browser: nothing is sent anywhere. Use it only on lists you are allowed to process.</p>
+<textarea id="in" placeholder="Contact: Jane &lt;Jane@Example.com&gt;, sales@example.org; jane@example.com"></textarea>
+<p><button id="go">Extract</button><button id="cp">Copy list</button><button id="dl">Download emails.txt</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<div class="cta">
+Next step: check the extracted list for typos, disposable and role addresses with the
+<a href="email-checker.html">free email list checker</a> (small lists), or run big lists (thousands of rows) with the
+<a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker on Apify</a>.
+Also: <a href="csv-cleaner.html">CSV cleaner</a> | <a href="json-to-csv.html">JSON to CSV</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Is my text uploaded?</b> No. Processing is local JavaScript.</p>
+<p><b>What counts as an email?</b> The pattern local@domain.tld with common characters. It finds candidates; it does not prove a mailbox exists. Use the checker for validation.</p>
+<p><b>Does it handle obfuscated emails (name [at] site [dot] com)?</b> No, only normal addresses.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function extract(text){
+ const re=/[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g;
+ const all=(text.match(re)||[]).map(e=>e.replace(/^[.\-]+/,'').toLowerCase()).filter(e=>e.includes('@'));
+ const uniq=[...new Set(all)].sort();
+ const dom={};uniq.forEach(e=>{const d=e.split('@')[1];dom[d]=(dom[d]||0)+1});
+ return{found:all.length,list:uniq,domains:Object.keys(dom).length}}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+$('go').onclick=()=>{const r=extract($('in').value);$('out').value=r.list.join('\n');$('sum').textContent=r.found+' found, '+r.list.length+' unique, '+r.domains+' domains'};
+$('cp').onclick=()=>{$('out').select();document.execCommand('copy')};
+$('dl').onclick=()=>{const b=new Blob([$('out').value],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='emails.txt';a.click()};
+}
+if(typeof module!=='undefined')module.exports={extract};
+</script>
+</body>
+</html>
