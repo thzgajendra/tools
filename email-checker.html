@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Email List Checker: Syntax, Typos, Role and Disposable Addresses</title>
+<meta name="description" content="Paste a list of email addresses and check format, common domain typos (gmial.com), role accounts (info@) and disposable domains. Runs in your browser; nothing is uploaded.">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:160px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+table{border-collapse:collapse;width:100%;margin-top:1rem;font-size:14px}
+td,th{border-bottom:1px solid #ddd;padding:.3rem .5rem;text-align:left}
+.valid{color:#0a7a2f}.risky{color:#b36b00}.invalid{color:#b00020}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+small{color:#555}
+</style>
+</head>
+<body>
+<h1>Free Email List Checker</h1>
+<p>Paste one address per line (or comma separated). The check runs entirely in your browser: nothing is sent anywhere.</p>
+<textarea id="in" placeholder="jane.doe@gmail.com&#10;info@gmial.com&#10;someone@mailinator.com&#10;not-an-email"></textarea>
+<button id="go">Check list</button><button id="csv">Download CSV</button>
+<p id="sum"></p>
+<table id="out"></table>
+
+<div class="cta">
+<strong>Need to know if the domain really receives mail?</strong>
+This page only checks what can be known offline. The
+<a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker on Apify</a>
+adds a live mail-server (MX) lookup and a list of 120,000+ disposable domains, at $1 per 1,000 addresses, with an API and spreadsheet export.
+</div>
+
+<h2>What the statuses mean</h2>
+<ul>
+<li><b class="valid">valid</b>: well formed, no warning signs found here.</li>
+<li><b class="risky">risky</b>: well formed, but a role account (info@, sales@), a likely typo of a common provider, or a known throwaway domain.</li>
+<li><b class="invalid">invalid</b>: not a well-formed address.</li>
+</ul>
+<p><small>This tool does not contact mail servers and cannot confirm a mailbox exists. Its disposable list is a short sample. Check only lists you have a lawful reason to hold. Built by Gajendra Malviya, <a href="https://gajendramalviya.me/">gajendramalviya.me</a>.</small></p>
+
+<script>
+const ROLE=new Set("abuse accounts admin administrator billing careers contact customerservice enquiries feedback hello help hostmaster hr info jobs legal mail marketing media no-reply noreply office orders postmaster press privacy sales security service support team webmaster".split(" "));
+const DISP=new Set("mailinator.com guerrillamail.com 10minutemail.com tempmail.com temp-mail.org yopmail.com trashmail.com throwawaymail.com sharklasers.com getnada.com dispostable.com maildrop.cc fakeinbox.com mintemail.com mohmal.com".split(" "));
+const FREE=new Set("gmail.com googlemail.com yahoo.com yahoo.co.in yahoo.in hotmail.com outlook.com live.com msn.com icloud.com aol.com proton.me protonmail.com zoho.com rediffmail.com".split(" "));
+const TYPO=["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","aol.com","live.com","protonmail.com","rediffmail.com"];
+const LOCAL=/^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*$/i;
+const DOM=/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+function dist(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){const c=a[i-1]===b[j-1]?0:1;d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}return d[a.length][b.length]}
+function check(raw){const e=raw.trim();const at=e.lastIndexOf("@");
+if(!e)return null;
+if(at<1||at===e.length-1||e.indexOf("@")!==at)return{e,s:"invalid",r:"needs exactly one @ with text on both sides"};
+if(e.length>254)return{e,s:"invalid",r:"longer than 254 characters"};
+const l=e.slice(0,at),d=e.slice(at+1).toLowerCase();
+if(l.length>64||!LOCAL.test(l))return{e,s:"invalid",r:"part before @ is not allowed"};
+if(!DOM.test(d))return{e,s:"invalid",r:"domain is not a valid host name"};
+const w=[];const parts=d.split(".");
+for(let i=0;i<parts.length-1;i++)if(DISP.has(parts.slice(i).join(".")))w.push("disposable domain");
+if(ROLE.has(l.toLowerCase().split("+")[0]))w.push("role account");
+if(!FREE.has(d)){const t=TYPO.find(x=>dist(d,x)===1);if(t)w.push("likely typo, did you mean "+l+"@"+t+"?")}
+return w.length?{e,s:"risky",r:w.join("; ")}:{e,s:"valid",r:FREE.has(d)?"free provider":""}}
+let rows=[];
+if(typeof document!=="undefined"){
+document.getElementById("go").onclick=()=>{
+const seen=new Set();rows=document.getElementById("in").value.split(/[\n,;]+/).map(x=>x.trim()).filter(x=>x&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase())).map(check).filter(Boolean);
+const c={valid:0,risky:0,invalid:0};rows.forEach(r=>c[r.s]++);
+document.getElementById("sum").textContent=rows.length+" unique addresses: "+c.valid+" valid, "+c.risky+" risky, "+c.invalid+" invalid";
+const t=document.getElementById("out");t.innerHTML="<tr><th>Address</th><th>Status</th><th>Note</th></tr>";
+rows.forEach(r=>{const tr=t.insertRow();tr.insertCell().textContent=r.e;const s=tr.insertCell();s.textContent=r.s;s.className=r.s;tr.insertCell().textContent=r.r})};
+document.getElementById("csv").onclick=()=>{if(!rows.length)return;
+const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+const b=new Blob(["address,status,note\n"+rows.map(r=>[r.e,r.s,r.r].map(q).join(",")).join("\n")],{type:"text/csv"});
+const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="email-check.csv";a.click()};
+}
+</script>
+</body>
+</html>
