@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gajendra Malviya — Work samples</title>
+<meta name="description" content="Backend engineer (Go). Open-source contributions to GoFr and cloudemu, data tools on Apify, and data-cleaning samples you can download.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#1b1a17;--muted:#67625a;--line:#e5dfd3;--accent:#0f6e4a}
+@media (prefers-color-scheme:dark){:root{--bg:#141412;--card:#1d1d1a;--ink:#efece5;--muted:#a39e93;--line:#2f2e2a;--accent:#6fd3a0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Figtree,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:48px 16px 80px}a{color:var(--accent)}
+h1,h2{font-family:"Bricolage Grotesque",sans-serif;line-height:1.1;margin:0}h1{font-size:44px}h2{font-size:26px;margin:48px 0 14px}
+.lede{color:var(--muted);font-size:18px;max-width:680px;margin:12px 0 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:28px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}.stat b{display:block;font:700 28px "Bricolage Grotesque"}.stat span{color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}.card h3{margin:0 0 6px;font-size:18px}.card p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.card ul{margin:0;padding-left:18px;font-size:15px}.links{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.foot{margin-top:56px;color:var(--muted);font-size:14px}
+</style></head><body><div class="wrap">
+<h1>Gajendra Malviya</h1>
+<p class="lede">Backend software engineer working in Go. I fix bugs, review code, write automation scripts and clean data. Everything below links to the real work, so you can check it before hiring me.</p>
+<div class="stats">
+ <div class="stat"><b>58</b><span>merged pull requests in open-source projects</span></div>
+ <div class="stat"><b>GoFr</b><span>Go framework with 20k+ GitHub stars, merged contributor</span></div>
+ <div class="stat"><b>4</b><span>paid data tools live on the Apify Store</span></div>
+</div>
+
+<h2>Open-source contributions</h2>
+<div class="grid">
+ <div class="card"><h3>GoFr — Go microservice framework</h3>
+  <p>Merged into the main framework and its CLI.</p>
+  <ul><li>Added HTTP QUERY method support</li><li>Tests for the websocket module</li><li>Fixed request wrappers and naming in generated gRPC code (gofr-cli)</li><li>Fixed migration naming (gofr-cli)</li></ul>
+  <div class="links" style="margin-top:10px"><a href="https://github.com/gofr-dev/gofr/pulls?q=is%3Apr+author%3Athzgajendra+is%3Amerged">GoFr PRs ↗</a><a href="https://github.com/gofr-dev/gofr-cli/pulls?q=is%3Apr+author%3Athzgajendra+is%3Amerged">gofr-cli PRs ↗</a></div></div>
+ <div class="card"><h3>cloudemu — in-memory AWS/Azure/GCP emulator</h3>
+  <p>52 merged pull requests closing gaps between the emulator and real cloud APIs (ECS, SageMaker, VPC Lattice, Bedrock, Network Firewall and more), each with SDK round-trip tests.</p>
+  <div class="links"><a href="https://github.com/stackshy/cloudemu/pulls?q=is%3Apr+author%3Athzgajendra+is%3Amerged">cloudemu PRs ↗</a></div></div>
+</div>
+
+<h2>Data tools I built and run</h2>
+<div class="grid">
+ <div class="card"><h3>Email List Checker</h3><p>Bulk check of format, mail server (MX), disposable domains, role accounts and typos.</p><div class="links"><a href="https://apify.com/gajendra_malviya/email-list-checker">Apify ↗</a><a href="email-checker.html">Free browser version</a></div></div>
+ <div class="card"><h3>PDF to Text, page by page</h3><p>Extracts text from PDF links, one record per page, with metadata.</p><div class="links"><a href="https://apify.com/gajendra_malviya/pdf-to-text-pages">Apify ↗</a></div></div>
+ <div class="card"><h3>Image to Text (OCR)</h3><p>Reads text from images with confidence scores; skips images with no readable text.</p><div class="links"><a href="https://apify.com/gajendra_malviya/image-to-text-ocr">Apify ↗</a></div></div>
+ <div class="card"><h3>App Store reviews, every country</h3><p>Collects public App Store reviews across countries in one run.</p><div class="links"><a href="https://apify.com/gajendra_malviya/app-store-reviews-all-countries">Apify ↗</a></div></div>
+</div>
+
+<h2>Sample: cleaning a messy customer list</h2>
+<p class="lede" style="font-size:16px">A small sample file with the problems real exports have: mixed case, extra spaces, three date formats, phones with and without country codes, a blank row and a duplicate.</p>
+<div class="card" style="margin-top:14px">
+<table><tr><th>Before</th><th>After</th></tr>
+<tr><td>"  ravi KUMAR " · 98765 43210 · 3/4/2026</td><td>Ravi Kumar · +91 98765 43210 · 2026-04-03</td></tr>
+<tr><td>Ravi Kumar · +91 98765-43210 · 2026-04-03</td><td><i>duplicate, removed</i></td></tr>
+<tr><td>ANA&nbsp;&nbsp;&nbsp;silva · +1 (415) 555-0134 · April 7 2026</td><td>Ana Silva · +1 415-555-0134 · 2026-04-07</td></tr>
+<tr><td>meera nair · 12345 · "sometime in May"</td><td>kept as is and flagged in the report (not guessed)</td></tr></table>
+<div class="links" style="margin-top:12px"><a href="samples/customers-messy.csv">messy file</a><a href="samples/customers-clean.csv">clean CSV</a><a href="samples/customers-clean.xlsx">clean Excel</a><a href="samples/change-report.md">change report</a></div></div>
+
+<h2>How I work</h2>
+<div class="grid">
+ <div class="card"><h3>Root cause first</h3><p>For bugs you get the cause in plain words, the fix, and a test that proves it.</p></div>
+ <div class="card"><h3>Checked before delivery</h3><p>Every file and script is run on your data before I send it, with a short report of what changed.</p></div>
+ <div class="card"><h3>Open about tools</h3><p>I use AI-assisted tooling to work faster and verify everything myself. If you need work done without AI tools, tell me before ordering.</p></div>
+</div>
+<p class="foot"><a href="https://github.com/thzgajendra">GitHub</a> · <a href="https://gajendramalviya.me/">gajendramalviya.me</a> · <a href="./">Free tools</a></p>
+</div></body></html>
