@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Sitemap XML to URL List / CSV Converter (sitemap.xml parser)</title>
+<meta name="description" content="Paste sitemap.xml and get a clean list of URLs with lastmod, as text or CSV. Handles sitemap index files, dedupes, filters by text. Runs in your browser; nothing is uploaded.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/sitemap-to-csv.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:180px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+input[type=text]{padding:.4rem;width:16rem}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free Sitemap XML to URL List / CSV</h1>
+<p>Open a site's <code>/sitemap.xml</code> in your browser, select all, copy, and paste the XML below. You get one URL per line (or a CSV with lastmod). Duplicates are removed. If the file is a sitemap index, the child sitemap links are listed so you can open them one by one. Runs in your browser: nothing is uploaded.</p>
+<textarea id="in" placeholder="&lt;urlset&gt;&lt;url&gt;&lt;loc&gt;https://example.com/&lt;/loc&gt;&lt;lastmod&gt;2026-01-01&lt;/lastmod&gt;&lt;/url&gt;...&lt;/urlset&gt;"></textarea>
+<p>Only URLs containing: <input type="text" id="flt" placeholder="e.g. /blog/ (optional)"></p>
+<p><button id="go">Convert</button><button id="cp">Copy URLs</button><button id="dl">Download urls.csv</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<div class="cta">
+Need to fetch sitemaps automatically, follow index files, or process many sites at once? The
+<a href="https://apify.com/gajendra_malviya">Sitemap URL Extractor on Apify</a> (see my Apify profile) does it from just a domain name.
+Also free here: <a href="extract-emails.html">email extractor</a> | <a href="json-to-csv.html">JSON to CSV</a> | <a href="csv-cleaner.html">CSV cleaner</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Is my XML uploaded?</b> No. Processing is local JavaScript.</p>
+<p><b>Why paste instead of entering a URL?</b> Browsers block reading other sites' files from a web page (CORS), so the paste step keeps this tool private and serverless.</p>
+<p><b>Does it read .xml.gz sitemaps?</b> Not here; unzip first or use the Apify actor.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function parseSitemap(xml,filter){
+ const unesc=s=>s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/<!\[CDATA\[|\]\]>/g,'').trim();
+ const isIndex=/<sitemapindex[\s>]/i.test(xml);
+ const tag=isIndex?'sitemap':'url';
+ const blocks=xml.match(new RegExp('<'+tag+'[\\s>][\\s\\S]*?</'+tag+'>','gi'))||[];
+ const seen=new Set(),rows=[];
+ for(const b of blocks){
+  const l=b.match(/<loc>([\s\S]*?)<\/loc>/i);if(!l)continue;
+  const loc=unesc(l[1]);if(!loc||seen.has(loc))continue;
+  if(filter&&!loc.includes(filter))continue;
+  seen.add(loc);
+  const m=b.match(/<lastmod>([\s\S]*?)<\/lastmod>/i);
+  rows.push({loc,lastmod:m?unesc(m[1]):''});
+ }
+ return{isIndex,rows};
+}
+function toCsv(rows){
+ const q=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+ return ['url,lastmod'].concat(rows.map(r=>q(r.loc)+','+q(r.lastmod))).join('\n');
+}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);let last=[];
+$('go').onclick=()=>{const r=parseSitemap($('in').value,$('flt').value.trim());last=r.rows;
+ $('out').value=r.rows.map(x=>x.loc).join('\n');
+ $('sum').textContent=r.rows.length+' unique '+(r.isIndex?'child sitemaps (this is a sitemap index)':'URLs')};
+$('cp').onclick=()=>{$('out').select();document.execCommand('copy')};
+$('dl').onclick=()=>{const b=new Blob([toCsv(last)],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='urls.csv';a.click()};
+}
+if(typeof module!=='undefined')module.exports={parseSitemap,toCsv};
+</script>
+</body>
+</html>
