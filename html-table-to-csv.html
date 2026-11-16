@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free HTML Table to CSV Converter (paste HTML, download CSV)</title>
+<meta name="description" content="Paste HTML containing a table and get a clean CSV. Handles multiple tables, header rows, quotes and commas. Runs in your browser; nothing is uploaded.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/html-table-to-csv.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:180px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+select{padding:.4rem}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free HTML Table to CSV Converter</h1>
+<p>On any web page, right-click a table, choose Inspect, copy the <code>&lt;table&gt;</code> element (or copy the whole page source) and paste it below. Pick the table, then copy or download the CSV. Runs in your browser: nothing is uploaded.</p>
+<textarea id="in" placeholder="&lt;table&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Price&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Pen&lt;/td&gt;&lt;td&gt;1.50&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;"></textarea>
+<p><button id="go">Convert</button> Table: <select id="sel"></select>
+<button id="cp">Copy CSV</button><button id="dl">Download table.csv</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<div class="cta">
+Need text from whole pages or documents instead? The
+<a href="https://apify.com/gajendra_malviya">Document to Text tool on Apify</a> (see my Apify profile) turns HTML, DOCX, XLSX and PPTX links into clean text.
+Also free here: <a href="json-to-csv.html">JSON to CSV</a> | <a href="csv-cleaner.html">CSV cleaner</a> | <a href="sitemap-to-csv.html">sitemap to CSV</a> | <a href="extract-emails.html">email extractor</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Is my HTML uploaded?</b> No. Processing is local JavaScript.</p>
+<p><b>What about merged cells?</b> colspan/rowspan are not expanded; each cell becomes one column in its row.</p>
+<p><b>Nested tables?</b> Only the outer table's text is kept, inner tables are flattened into the cell text.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function htmlTablesToRows(html){
+ const dec=s=>s.replace(/<br\s*\/?>/gi,' ').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+ const tables=html.match(/<table[\s>][\s\S]*?<\/table>/gi)||[];
+ return tables.map(t=>{
+  const trs=t.match(/<tr[\s>][\s\S]*?<\/tr>/gi)||[];
+  return trs.map(tr=>(tr.match(/<t[hd][\s>][\s\S]*?<\/t[hd]>/gi)||[]).map(dec)).filter(r=>r.length);
+ });
+}
+function rowsToCsv(rows){
+ const q=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+ return rows.map(r=>r.map(q).join(',')).join('\n');
+}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);let tabs=[];
+function show(){const i=+$('sel').value||0;$('out').value=tabs[i]?rowsToCsv(tabs[i]):'';
+ $('sum').textContent=tabs.length?tabs.length+' table(s) found; showing '+(tabs[i]?tabs[i].length:0)+' rows':'No <table> found in the pasted HTML.';}
+$('go').onclick=()=>{tabs=htmlTablesToRows($('in').value);
+ $('sel').innerHTML=tabs.map((t,i)=>'<option value="'+i+'">Table '+(i+1)+' ('+t.length+' rows)</option>').join('');show();};
+$('sel').onchange=show;
+$('cp').onclick=()=>navigator.clipboard.writeText($('out').value);
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('out').value],{type:'text/csv'}));a.download='table.csv';a.click();};
+}
+if(typeof module!=='undefined')module.exports={htmlTablesToRows,rowsToCsv};
+</script>
+</body>
+</html>
