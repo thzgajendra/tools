@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free CSV Cleaner: Remove Duplicate Rows, Blank Rows and Extra Spaces Online</title>
+<meta name="description" content="Paste CSV data, trim whitespace, drop blank rows and remove duplicate rows (by whole row or a chosen column). Runs in your browser; nothing is uploaded.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/csv-cleaner.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:180px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+label{margin-right:1rem}input[type=number]{width:4rem}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free CSV Cleaner</h1>
+<p>Paste CSV (first row = header). Everything runs in your browser: nothing is sent anywhere.</p>
+<textarea id="in" placeholder="name,email&#10;Jane , jane@x.com&#10;Jane,jane@x.com&#10;,&#10;Bob,bob@x.com"></textarea>
+<p>
+<label><input type="checkbox" id="trim" checked> Trim spaces</label>
+<label><input type="checkbox" id="blank" checked> Drop blank rows</label>
+<label><input type="checkbox" id="dup" checked> Remove duplicates</label>
+<label>by column # (0 = whole row) <input type="number" id="col" value="0" min="0"></label>
+<label><input type="checkbox" id="ci" checked> ignore case</label>
+</p>
+<button id="go">Clean</button><button id="dl">Download cleaned.csv</button>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+
+<div class="cta">
+<strong>Cleaning email lists?</strong> Use the <a href="email-checker.html">free email list checker</a>, or run
+<a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker on Apify</a> for big lists (MX check, 120k+ disposable domains).
+Need text out of PDFs or images? <a href="https://apify.com/gajendra_malviya/pdf-to-text-pages">PDF to Text</a> ·
+<a href="https://apify.com/gajendra_malviya/image-to-text-ocr">Image OCR</a>.
+</div>
+
+<h2>FAQ</h2>
+<p><b>Is my data uploaded?</b> No. The page is static JavaScript; processing happens locally.</p>
+<p><b>How are duplicates decided?</b> By the whole row, or by one column you pick (1 = first column). The first occurrence is kept.</p>
+<p><b>Quoted fields?</b> Quotes and commas inside quotes are handled.</p>
+<p>By <a href="https://gajendramalviya.me/">Gajendra Malviya</a> · <a href="index.html">more tools</a></p>
+
+<script>
+function parse(t){const rows=[];let r=[],f='',q=false;
+for(let i=0;i<t.length;i++){const c=t[i];
+ if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+ else if(c=='"')q=true;
+ else if(c==','){r.push(f);f=''}
+ else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);rows.push(r);r=[];f=''}
+ else f+=c}
+if(f!==''||r.length){r.push(f);rows.push(r)}return rows}
+function esc(v){return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function clean(text,o){let rows=parse(text);const total=rows.length;
+ if(!rows.length)return{rows:[],total:0,blank:0,dups:0};
+ const head=rows.shift();
+ if(o.trim)rows=rows.map(r=>r.map(x=>x.trim()));
+ let blank=0,dups=0;
+ if(o.blank){const n=rows.length;rows=rows.filter(r=>r.some(x=>x.trim()!==''));blank=n-rows.length}
+ if(o.dup){const seen=new Set();const n=rows.length;
+  rows=rows.filter(r=>{let k=o.col>0?(r[o.col-1]||''):JSON.stringify(r);if(o.ci)k=k.toLowerCase();
+   if(seen.has(k))return false;seen.add(k);return true});dups=n-rows.length}
+ return{rows:[head,...rows],total,blank,dups}}
+function csvOut(rows){return rows.map(r=>r.map(esc).join(',')).join('\n')}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+$('go').onclick=()=>{const res=clean($('in').value,{trim:$('trim').checked,blank:$('blank').checked,dup:$('dup').checked,col:+$('col').value||0,ci:$('ci').checked});
+ $('out').value=csvOut(res.rows);
+ $('sum').textContent=res.total?`Input rows (incl. header): ${res.total}. Removed ${res.blank} blank, ${res.dups} duplicate. Output data rows: ${res.rows.length-1}.`:'Nothing to clean.'};
+$('dl').onclick=()=>{const b=new Blob([$('out').value],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cleaned.csv';a.click()};
+}
+if(typeof module!=='undefined')module.exports={clean,csvOut};
+</script>
+</body>
+</html>
