@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Remove Duplicate Lines Tool (dedupe, sort, trim) - runs in your browser</title>
+<meta name="description" content="Paste a list and remove duplicate lines instantly. Options: ignore case, trim spaces, drop blank lines, sort A-Z. Nothing is uploaded; runs in your browser.">
+<link rel="canonical" href="https://thzgajendra.github.io/tools/dedupe-lines.html">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+textarea{width:100%;height:200px;font:14px monospace;padding:.5rem;box-sizing:border-box}
+button{padding:.6rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem .5rem .5rem 0}
+label{margin-right:1rem}
+.cta{background:#f3f7ff;border:1px solid #c9d8ff;padding:1rem;margin:1.5rem 0;border-radius:6px}
+</style>
+</head>
+<body>
+<h1>Free Remove Duplicate Lines Tool</h1>
+<p>Paste a list (emails, URLs, keywords, IDs), one item per line. Runs in your browser: nothing is uploaded.</p>
+<textarea id="in"></textarea>
+<p><label><input type="checkbox" id="ic" checked> Ignore case</label>
+<label><input type="checkbox" id="tr" checked> Trim spaces</label>
+<label><input type="checkbox" id="bl" checked> Drop blank lines</label>
+<label><input type="checkbox" id="so"> Sort A-Z</label></p>
+<p><button id="go">Remove duplicates</button><button id="cp">Copy result</button></p>
+<p id="sum"></p>
+<textarea id="out" readonly></textarea>
+<div class="cta">
+Cleaning an email list? Check which addresses are real with the free <a href="email-checker.html">email list checker</a>, or run
+<a href="https://apify.com/gajendra_malviya/email-list-checker">Email List Checker on Apify</a> for big lists (MX, disposable and typo checks).
+Also free: <a href="csv-cleaner.html">CSV cleaner</a> | <a href="extract-emails.html">email extractor</a> | <a href="sitemap-to-csv.html">sitemap to CSV</a>.
+</div>
+<h2>FAQ</h2>
+<p><b>Which copy is kept?</b> The first occurrence; order is preserved unless you sort.</p>
+<p><b>Is my data uploaded?</b> No. Processing is local JavaScript.</p>
+<p><a href="./">More free tools</a> | By <a href="https://gajendramalviya.me/">Gajendra Malviya</a></p>
+<script>
+function dedupeLines(text,o){
+ o=o||{};let lines=text.split(/\r?\n/);
+ if(o.trim)lines=lines.map(s=>s.trim());
+ if(o.dropBlank)lines=lines.filter(s=>s.length);
+ const seen=new Set(),out=[];
+ for(const l of lines){const k=o.ignoreCase?l.toLowerCase():l;if(!seen.has(k)){seen.add(k);out.push(l);}}
+ if(o.sort)out.sort((a,b)=>a.localeCompare(b));
+ return {lines:out,removed:lines.length-out.length};
+}
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+$('go').onclick=()=>{const r=dedupeLines($('in').value,{ignoreCase:$('ic').checked,trim:$('tr').checked,dropBlank:$('bl').checked,sort:$('so').checked});
+ $('out').value=r.lines.join('\n');$('sum').textContent=r.lines.length+' unique lines kept, '+r.removed+' removed.';};
+$('cp').onclick=()=>navigator.clipboard.writeText($('out').value);
+}
+if(typeof module!=='undefined')module.exports={dedupeLines};
+</script>
+</body>
+</html>
